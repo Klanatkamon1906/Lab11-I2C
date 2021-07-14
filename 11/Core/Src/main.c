@@ -55,6 +55,8 @@ uint8_t eepromDataReadBack[4];
 uint8_t IOExpdrDataReadBack;
 uint8_t IOExpdrDataWrite = 0b01010101;
 
+uint8_t ButtonState[2] = {0};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,11 +117,23 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-		EEPROMWriteExample();
-		EEPROMReadExample(eepromDataReadBack, 4);
-
-		IOExpenderReadPinA(&IOExpdrDataReadBack);
-		IOExpenderWritePinB(IOExpdrDataWrite);
+//		EEPROMWriteExample();
+//		EEPROMReadExample(eepromDataReadBack, 4);
+//
+//		IOExpenderReadPinA(&IOExpdrDataReadBack);
+//		IOExpenderWritePinB(IOExpdrDataWrite);
+		ButtonState[0] = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);	// Read State from blue button
+		if(ButtonState[0] == 1 && ButtonState[1] == 0){				// When blue button pushed
+			IOExpdrExampleReadFlag = 1;
+			eepromExampleWriteFlag = 1;
+			IOExpenderReadPinA(&IOExpdrDataReadBack);	// Read button on matrix board
+			EEPROMWriteExample();						// Write matrix button State to eeprom
+		}
+		eepromExampleReadFlag = 1;
+		IOExpdrExampleWriteFlag = 1;
+		EEPROMReadExample(eepromDataReadBack, 4);		// Read matrix button State from eeprom
+		IOExpenderWritePinB(IOExpdrDataWrite);			// Write matrix button State to LED
+		ButtonState[1] = ButtonState[0];				// Set last blue button state
 
     /* USER CODE END WHILE */
 
