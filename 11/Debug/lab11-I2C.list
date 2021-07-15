@@ -955,13 +955,13 @@ void EEPROMWriteExample(uint8_t Wdata) {
  8000888:	b2da      	uxtb	r2, r3
  800088a:	4b0b      	ldr	r3, [pc, #44]	; (80008b8 <EEPROMWriteExample+0x84>)
  800088c:	70da      	strb	r2, [r3, #3]
-		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x20, I2C_MEMADD_SIZE_16BIT,MButtonState, 4);
+		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x12, I2C_MEMADD_SIZE_16BIT,MButtonState, 4);
  800088e:	2304      	movs	r3, #4
  8000890:	9301      	str	r3, [sp, #4]
  8000892:	4b09      	ldr	r3, [pc, #36]	; (80008b8 <EEPROMWriteExample+0x84>)
  8000894:	9300      	str	r3, [sp, #0]
  8000896:	2310      	movs	r3, #16
- 8000898:	2220      	movs	r2, #32
+ 8000898:	2212      	movs	r2, #18
  800089a:	21a0      	movs	r1, #160	; 0xa0
  800089c:	4805      	ldr	r0, [pc, #20]	; (80008b4 <EEPROMWriteExample+0x80>)
  800089e:	f000 ffab 	bl	80017f8 <HAL_I2C_Mem_Write_IT>
@@ -998,13 +998,13 @@ void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
  80008d8:	2b20      	cmp	r3, #32
  80008da:	d10c      	bne.n	80008f6 <EEPROMReadExample+0x3a>
 
-		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x20, I2C_MEMADD_SIZE_16BIT,
+		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x12, I2C_MEMADD_SIZE_16BIT,
  80008dc:	887b      	ldrh	r3, [r7, #2]
  80008de:	9301      	str	r3, [sp, #4]
  80008e0:	687b      	ldr	r3, [r7, #4]
  80008e2:	9300      	str	r3, [sp, #0]
  80008e4:	2310      	movs	r3, #16
- 80008e6:	2220      	movs	r2, #32
+ 80008e6:	2212      	movs	r2, #18
  80008e8:	21a0      	movs	r1, #160	; 0xa0
  80008ea:	4806      	ldr	r0, [pc, #24]	; (8000904 <EEPROMReadExample+0x48>)
  80008ec:	f001 f836 	bl	800195c <HAL_I2C_Mem_Read_IT>
