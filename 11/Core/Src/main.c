@@ -49,13 +49,15 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 uint8_t eepromExampleWriteFlag = 0;
 uint8_t eepromExampleReadFlag = 0;
-uint8_t IOExpdrExampleWriteFlag = 0;
+uint8_t IOExpdrExampleWriteFlag = 1;
 uint8_t IOExpdrExampleReadFlag = 0;
 uint8_t eepromDataReadBack[4];
 uint8_t IOExpdrDataReadBack;
 uint8_t IOExpdrDataWrite = 0b01010101;
 
-uint8_t ButtonState[2] = {0};
+uint8_t B1ButtonState[2] = {1,1};
+uint8_t MButtonState[4] = {0};
+uint32_t ButtonTimeStamp = 0;
 
 /* USER CODE END PV */
 
@@ -65,7 +67,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-void EEPROMWriteExample();
+void EEPROMWriteExample(uint8_t Wdata);
 void EEPROMReadExample(uint8_t *Rdata, uint16_t len);
 
 void IOExpenderInit();
@@ -117,23 +119,24 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-//		EEPROMWriteExample();
-//		EEPROMReadExample(eepromDataReadBack, 4);
-//
-//		IOExpenderReadPinA(&IOExpdrDataReadBack);
-//		IOExpenderWritePinB(IOExpdrDataWrite);
-		ButtonState[0] = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);	// Read State from blue button
-		if(ButtonState[0] == 1 && ButtonState[1] == 0){				// When blue button pushed
+		B1ButtonState[0] = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+		if(B1ButtonState[0] == 0 && B1ButtonState[1] == 1){
 			IOExpdrExampleReadFlag = 1;
 			eepromExampleWriteFlag = 1;
-			IOExpenderReadPinA(&IOExpdrDataReadBack);	// Read button on matrix board
-			EEPROMWriteExample();						// Write matrix button State to eeprom
+			IOExpenderReadPinA(&IOExpdrDataReadBack);
+			HAL_Delay(10);
+			EEPROMWriteExample(IOExpdrDataReadBack);
 		}
-		eepromExampleReadFlag = 1;
-		IOExpdrExampleWriteFlag = 1;
-		EEPROMReadExample(eepromDataReadBack, 4);		// Read matrix button State from eeprom
-		IOExpenderWritePinB(IOExpdrDataWrite);			// Write matrix button State to LED
-		ButtonState[1] = ButtonState[0];				// Set last blue button state
+		if(HAL_GetTick() - ButtonTimeStamp >= 100){
+			ButtonTimeStamp = HAL_GetTick();
+			IOExpdrExampleWriteFlag = 1;
+			eepromExampleReadFlag = 1;
+			HAL_Delay(10);
+			EEPROMReadExample(eepromDataReadBack, 4);
+			HAL_Delay(10);
+			IOExpenderWritePinB(eepromDataReadBack[0] | (eepromDataReadBack[1] << 2) | (eepromDataReadBack[2] << 4) | (eepromDataReadBack[3] << 6));
+			}
+		B1ButtonState[1] = B1ButtonState[0];
 
     /* USER CODE END WHILE */
 
@@ -287,22 +290,21 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void EEPROMWriteExample() {
+void EEPROMWriteExample(uint8_t Wdata) {
 	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
 
-		static uint8_t data[4] = { 0xff, 0x00, 0x55, 0xaa };
-		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2C, I2C_MEMADD_SIZE_16BIT,
-				data, 4);
-
-
-
+		MButtonState[0] = Wdata & 0b00000001;
+		MButtonState[1] = (Wdata>>1) & 0b00000001;
+		MButtonState[2] = (Wdata>>2) & 0b00000001;
+		MButtonState[3] = (Wdata>>3) & 0b00000001;
+		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x20, I2C_MEMADD_SIZE_16BIT,MButtonState, 4);
 		eepromExampleWriteFlag = 0;
 	}
 }
 void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
 	if (eepromExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
 
-		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
+		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x20, I2C_MEMADD_SIZE_16BIT,
 				Rdata, len);
 		eepromExampleReadFlag = 0;
 	}
